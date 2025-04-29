@@ -1,0 +1,36 @@
+name: Sync fork with upstream
+
+on:
+  schedule:
+    - cron: '0 2 * * 1'   # Runs every Monday at 2 AM UTC
+  workflow_dispatch:      # Allow manual trigger from GitHub UI
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout the fork
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          ref: master
+
+      - name: Set up Git
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions@github.com"
+
+      - name: Add upstream remote and fetch
+        run: |
+          git remote add upstream https://github.com/rajeshrinet/pystokes.git
+          git fetch upstream
+
+      - name: Merge upstream/master into fork/master
+        run: |
+          git checkout master
+          git merge upstream/master --allow-unrelated-histories || true
+
+      - name: Push changes to fork
+        run: |
+          git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/SoftMatterGroupCambridge/pystokes.git master
